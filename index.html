@@ -67,6 +67,17 @@
       box-shadow: 0 2px 4px rgba(0,0,0,0.1);
       text-align: left;
     }
+
+    #reaction-buttons button {
+      font-size: 1.5rem;
+      padding: 10px 20px;
+      margin: 10px 5px;
+      border: none;
+      background: white;
+      border-radius: 12px;
+      cursor: pointer;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    }
   </style>
 </head>
 <body>
@@ -85,8 +96,15 @@
   </div>
   <ul id="messages"></ul>
 
+  <h2 style="margin-top: 60px;">🔥 리액션</h2>
+  <div id="reaction-buttons">
+    <button onclick="react('❤️')">❤️</button>
+    <button onclick="react('👍')">👍</button>
+    <button onclick="react('😂')">😂</button>
+  </div>
+  <div id="reaction-counts" style="margin-top: 10px;"></div>
+
   <script>
-    // Firebase 설정
     const firebaseConfig = {
       apiKey: "AIzaSyBp671eoHPSwTCQRXZbcUDwA3TsSsE3-dA",
       authDomain: "eve-vote.firebaseapp.com",
@@ -145,8 +163,31 @@
       });
     }
 
+    async function react(emoji) {
+      const docRef = db.collection("reactions").doc(emoji);
+      const doc = await docRef.get();
+      if (doc.exists) {
+        await docRef.update({ count: doc.data().count + 1 });
+      } else {
+        await docRef.set({ count: 1 });
+      }
+      loadReactions();
+    }
+
+    async function loadReactions() {
+      const snapshot = await db.collection("reactions").get();
+      const container = document.getElementById("reaction-counts");
+      container.innerHTML = "";
+      snapshot.forEach(doc => {
+        const emoji = doc.id;
+        const count = doc.data().count;
+        container.innerHTML += `<span style="font-size: 1.5rem; margin: 0 10px;">${emoji} ${count}</span>`;
+      });
+    }
+
     fetchResults();
     loadMessages();
+    loadReactions();
     setInterval(fetchResults, 3000);
   </script>
 </body>
