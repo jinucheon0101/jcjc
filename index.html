@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>이브 운동 투표</title>
+  <style>
+    body {
+      background: #f5f8ff;
+      font-family: 'Apple SD Gothic Neo', sans-serif;
+      text-align: center;
+      padding: 40px;
+      color: #333;
+    }
+    h1 {
+      font-size: 2.5rem;
+      margin-bottom: 30px;
+      color: #2a2a2a;
+    }
+    .buttons {
+      margin: 30px 0;
+    }
+    button {
+      font-size: 1.5rem;
+      padding: 20px 40px;
+      margin: 0 20px;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    button:active {
+      transform: scale(0.95);
+    }
+    .yes {
+      background-color: #4caf50;
+      color: white;
+    }
+    .no {
+      background-color: #f44336;
+      color: white;
+    }
+    .results {
+      margin-top: 40px;
+      font-size: 1.2rem;
+      display: flex;
+      justify-content: center;
+      gap: 60px;
+    }
+    .result-item {
+      padding: 20px;
+      border-radius: 10px;
+      background: white;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+    .count {
+      font-size: 2rem;
+      font-weight: bold;
+      color: #3f51b5;
+    }
+  </style>
+</head>
+<body>
+  <h1>이브가 오늘 운동을 할까?</h1>
+  <div class="buttons">
+    <button class="yes" onclick="vote('운동 간다')">운동 간다 💪</button>
+    <button class="no" onclick="vote('안 간다')">안 간다 🛌</button>
+  </div>
+  <div class="results">
+    <div class="result-item">
+      운동 간다<br />
+      <span id="yes-count" class="count">0</span>
+    </div>
+    <div class="result-item">
+      안 간다<br />
+      <span id="no-count" class="count">0</span>
+    </div>
+  </div>
+
+  <script>
+    async function vote(option) {
+      await fetch('/api/vote', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ option })
+      });
+      fetchResults();
+    }
+
+    async function fetchResults() {
+      const res = await fetch('/api/results');
+      const data = await res.json();
+      document.getElementById('yes-count').textContent = data['운동 간다'] ?? 0;
+      document.getElementById('no-count').textContent = data['안 간다'] ?? 0;
+    }
+
+    fetchResults();
+    setInterval(fetchResults, 3000);
+  </script>
+</body>
+</html>
