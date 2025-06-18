@@ -6,7 +6,7 @@
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
     import {
-      getFirestore, collection, addDoc, getDocs, query, orderBy, updateDoc, doc, increment, serverTimestamp
+      getFirestore, collection, addDoc, getDocs, query, orderBy, updateDoc, doc, increment, serverTimestamp, getDoc, setDoc
     } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
     const firebaseConfig = {
@@ -21,6 +21,24 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
+    async function vote(option) {
+      const ref = doc(db, "votes", option);
+      const snap = await getDoc(ref);
+      if (snap.exists()) {
+        await updateDoc(ref, { count: increment(1) });
+      } else {
+        await setDoc(ref, { count: 1 });
+      }
+      fetchResults();
+    }
+
+    async function fetchResults() {
+      const yesSnap = await getDoc(doc(db, "votes", "운동 간다"));
+      const noSnap = await getDoc(doc(db, "votes", "안 간다"));
+      document.getElementById("yes-count").textContent = yesSnap.exists() ? yesSnap.data().count : 0;
+      document.getElementById("no-count").textContent = noSnap.exists() ? noSnap.data().count : 0;
+    }
+
     async function loadMessages() {
       const messagesCol = collection(db, "messages");
       const q = query(messagesCol, orderBy("timestamp", "desc"));
@@ -30,7 +48,7 @@
       list.innerHTML = "";
       snapshot.forEach(docSnap => {
         const data = docSnap.data();
-        if (!data.message) return; // 메시지가 없으면 건너뛰기
+        if (!data.message) return;
 
         const name = data.name || "익명";
         const message = data.message || "";
@@ -81,6 +99,7 @@
         loadMessages();
       });
 
+      fetchResults();
       loadMessages();
     });
   </script>
@@ -175,27 +194,6 @@
   </form>
 
   <ul id="message-list"></ul>
-
-  <script>
-    async function vote(option) {
-      await fetch("https://eve-vote.vercel.app/api/vote", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ option })
-      });
-      fetchResults();
-    }
-
-    async function fetchResults() {
-      const res = await fetch("https://eve-vote.vercel.app/api/results");
-      const data = await res.json();
-      document.getElementById("yes-count").textContent = data["운동 간다"] ?? 0;
-      document.getElementById("no-count").textContent = data["안 간다"] ?? 0;
-    }
-
-    fetchResults();
-    setInterval(fetchResults, 5000);
-  </script>
 </body>
 </html>
 
