@@ -6,7 +6,7 @@
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
     import {
-      getFirestore, collection, addDoc, getDocs, query, orderBy, updateDoc, doc, increment, serverTimestamp, getDoc, setDoc
+      getFirestore, collection, addDoc, getDocs, query, orderBy, updateDoc, doc, increment, serverTimestamp, getDoc, setDoc, onSnapshot
     } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
     const firebaseConfig = {
@@ -29,14 +29,21 @@
       } else {
         await setDoc(ref, { count: 1 });
       }
-      fetchResults();
     }
 
-    async function fetchResults() {
-      const yesSnap = await getDoc(doc(db, "votes", "운동 간다"));
-      const noSnap = await getDoc(doc(db, "votes", "안 간다"));
-      document.getElementById("yes-count").textContent = yesSnap.exists() ? yesSnap.data().count : 0;
-      document.getElementById("no-count").textContent = noSnap.exists() ? noSnap.data().count : 0;
+    function setupRealtimeVoteListener() {
+      const yesRef = doc(db, "votes", "운동 간다");
+      const noRef = doc(db, "votes", "안 간다");
+
+      onSnapshot(yesRef, (docSnap) => {
+        const data = docSnap.data();
+        document.getElementById("yes-count").textContent = data?.count ?? 0;
+      });
+
+      onSnapshot(noRef, (docSnap) => {
+        const data = docSnap.data();
+        document.getElementById("no-count").textContent = data?.count ?? 0;
+      });
     }
 
     async function loadMessages() {
@@ -99,7 +106,7 @@
         loadMessages();
       });
 
-      fetchResults();
+      setupRealtimeVoteListener();
       loadMessages();
     });
   </script>
@@ -196,5 +203,3 @@
   <ul id="message-list"></ul>
 </body>
 </html>
-
-
