@@ -30,10 +30,15 @@
       list.innerHTML = "";
       snapshot.forEach(docSnap => {
         const data = docSnap.data();
-        const li = document.createElement("li");
+        if (!data.message) return; // 메시지가 없으면 건너뛰기
+
+        const name = data.name || "익명";
+        const message = data.message || "";
         const starDisplay = "⭐".repeat(data.stars ?? 0);
+
+        const li = document.createElement("li");
         li.innerHTML = `
-          <strong>${data.name || "익명"}</strong>: ${data.message}<br />
+          <strong>${name}</strong>${message ? `: ${message}` : ""}<br />
           <span>${starDisplay}</span><br />
           <button onclick="like('${docSnap.id}')">❤ ${data.likes ?? 0}</button>
           <button onclick="dislike('${docSnap.id}')">👎 ${data.dislikes ?? 0}</button>
@@ -193,4 +198,5 @@
   </script>
 </body>
 </html>
+
 
